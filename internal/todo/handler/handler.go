@@ -86,7 +86,17 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(todo)
 }
 
-func (h *Handler) GetTasks(w http.ResponseWriter, r *http.Request) {}
+func (h *Handler) GetTasks(w http.ResponseWriter, r *http.Request) {
+	todos, err := h.service.GetToDos()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(todos)
+}
 
 func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request, id int) {}
 

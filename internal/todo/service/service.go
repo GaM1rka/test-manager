@@ -1,6 +1,7 @@
 package service
 
 import (
+	"sort"
 	"test-manager/internal/todo/model"
 	"test-manager/internal/todo/repository"
 	validator "test-manager/pkg"
@@ -36,4 +37,17 @@ func (s *ToDoService) CreateToDo(title, description string) (*model.ToDo, error)
 	}
 
 	return todo, nil
+}
+
+func (s *ToDoService) GetToDos() ([]*model.ToDo, error) {
+	todos, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(todos, func(i, j int) bool {
+		return todos[i].ID < todos[j].ID
+	})
+
+	return todos, nil
 }

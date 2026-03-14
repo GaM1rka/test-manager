@@ -7,7 +7,7 @@ import (
 
 type ToDoRepository struct {
 	todos  map[int]*model.ToDo
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	nextID int
 }
 
@@ -26,4 +26,15 @@ func (r *ToDoRepository) Create(todo *model.ToDo) error {
 	r.nextID++
 	r.todos[todo.ID] = todo
 	return nil
+}
+
+func (r *ToDoRepository) GetAll() ([]*model.ToDo, error) {
+	r.mu.RLock()
+	defer r.mu.Unlock()
+
+	todos := make([]*model.ToDo, 0, len(r.todos))
+	for _, todo := range r.todos {
+		todos = append(todos, todo)
+	}
+	return todos, nil
 }
