@@ -17,3 +17,13 @@ func NewToDoRepository() *ToDoRepository {
 		nextID: 1,
 	}
 }
+
+func (r *ToDoRepository) Create(todo *model.ToDo) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	todo.ID = r.nextID
+	r.nextID++
+	r.todos[todo.ID] = todo
+	return nil
+}
