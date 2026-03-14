@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"test-manager/internal/todo/service"
+	validator "test-manager/pkg"
 
 	"github.com/sirupsen/logrus"
 )
@@ -85,9 +86,14 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	todo, err := h.service.CreateToDo(req.Title, req.Description)
 	if err != nil {
-		h.logger.WithError(err).Warn("Error while creating task")
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		if errors.Is(err, validator.ErrInvalidTitle) {
+			h.logger.WithError(err).Warn("Validation failed")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			h.logger.WithError(err).Warn("Error while creating task")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -135,6 +141,42 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request, id int) {
 	json.NewEncoder(w).Encode(todo)
 }
 
-func (h *Handler) UpdateTaskByID(w http.ResponseWriter, r *http.Request, id int) {}
+func (h *Handler) UpdateTaskByID(w http.ResponseWriter, r *http.Request, id int) {
+	h.logger.WithFields(logrus.Fields{
+		"method": "UpdateTaskByID",
+		"id":     id,
+	}).Info("Updating task")
+
+	var req struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Completed   bool   `json:"completed"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.WithError(err).Warn("Invalid JSON")
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	todo, err := h.service.UpdateToDo(id, req.Title, req.Description, req.Completed)
+	if err != nil {
+		if errors.Is(err, service.ErrTaskNotFound) {
+			h.logger.WithError(err).Warn("Task not found for update")
+			http.Error(w, "task not found", http.StatusNotFound)
+		} else if errors.Is(err, validator.ErrInvalidTitle) {
+			h.logger.WithError(err).Warn("Validation failed")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			h.logger.WithError(err).Error("Failed to update task")
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(todo)
+}
 
 func (h *Handler) DeleteTaskByID(w http.ResponseWriter, r *http.Request, id int) {}

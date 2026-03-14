@@ -68,3 +68,27 @@ func (s *ToDoService) GetToDoByID(id int) (*model.ToDo, error) {
 	}
 	return todo, nil
 }
+
+func (s *ToDoService) UpdateToDo(id int, title, description string, completed bool) (*model.ToDo, error) {
+	if err := validator.ValidateTodo(title); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	todo, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get todo %d: %w", id, err)
+	}
+	if todo == nil {
+		return nil, ErrTaskNotFound
+	}
+
+	todo.Title = title
+	todo.Description = description
+	todo.Completed = completed
+
+	if err := s.repo.Update(todo); err != nil {
+		return nil, fmt.Errorf("failed to update todo %d: %w", id, err)
+	}
+
+	return todo, nil
+}

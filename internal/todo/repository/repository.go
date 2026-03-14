@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"sync"
 	"test-manager/internal/todo/model"
 )
@@ -48,4 +49,16 @@ func (r *ToDoRepository) GetByID(id int) (*model.ToDo, error) {
 		return nil, nil
 	}
 	return todo, nil
+}
+
+func (r *ToDoRepository) Update(todo *model.ToDo) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.todos[todo.ID]; !exists {
+		return fmt.Errorf("todo %d not found", todo.ID)
+	}
+
+	r.todos[todo.ID] = todo
+	return nil
 }
