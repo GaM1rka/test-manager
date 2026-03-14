@@ -62,3 +62,15 @@ func (r *ToDoRepository) Update(todo *model.ToDo) error {
 	r.todos[todo.ID] = todo
 	return nil
 }
+
+func (r *ToDoRepository) Delete(id int) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.todos[id]; !exists {
+		return fmt.Errorf("todo %d not found", id)
+	}
+
+	delete(r.todos, id)
+	return nil
+}

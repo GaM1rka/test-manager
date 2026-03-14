@@ -92,3 +92,15 @@ func (s *ToDoService) UpdateToDo(id int, title, description string, completed bo
 
 	return todo, nil
 }
+
+func (s *ToDoService) DeleteToDo(id int) error {
+	if _, err := s.repo.GetByID(id); err != nil {
+		return fmt.Errorf("task %d not found: %w", id, ErrTaskNotFound)
+	}
+
+	if err := s.repo.Delete(id); err != nil {
+		return fmt.Errorf("failed to delete todo %d: %w", id, err)
+	}
+
+	return nil
+}

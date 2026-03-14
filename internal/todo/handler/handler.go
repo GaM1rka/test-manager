@@ -92,8 +92,8 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		} else {
 			h.logger.WithError(err).Warn("Error while creating task")
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
 		}
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -179,4 +179,24 @@ func (h *Handler) UpdateTaskByID(w http.ResponseWriter, r *http.Request, id int)
 	json.NewEncoder(w).Encode(todo)
 }
 
-func (h *Handler) DeleteTaskByID(w http.ResponseWriter, r *http.Request, id int) {}
+func (h *Handler) DeleteTaskByID(w http.ResponseWriter, r *http.Request, id int) {
+	h.logger.WithFields(logrus.Fields{
+		"method": "DeleteTaskByID",
+		"id":     id,
+	}).Info("Deleting task")
+
+	err := h.service.DeleteToDo(id)
+	if err != nil {
+		if errors.Is(err, service.ErrTaskNotFound) {
+			h.logger.WithError(err).Warn("Task not found for delete")
+			http.Error(w, "task not found", http.StatusNotFound)
+		} else {
+			h.logger.WithError(err).Error("Failed to delete task")
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
