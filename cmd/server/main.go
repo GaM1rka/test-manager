@@ -20,7 +20,7 @@ func main() {
 	cfg := config.Load() // To make structure with all related config data(for shutdoun etc.)
 
 	todoRepo := repository.NewToDoRepository()
-	todoService := service.NewTodoService(todoRepo, logger)
+	todoService := service.NewToDoService(todoRepo, logger)
 	h := handler.NewHandler(todoService, logger)
 
 	http.HandleFunc("/todos", h.TaskHandler)
@@ -40,7 +40,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	shutdownCtx, stop := context.WithTimeout(context.Background(), cfg.ShutdownTime)
+	shutdownCtx, stop := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer stop()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
