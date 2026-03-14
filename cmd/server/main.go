@@ -17,7 +17,7 @@ import (
 
 func main() {
 	logger := logrus.New()
-	cfg := config.Load() // To make structure with all related config data(for shutdoun etc.)
+	cfg := config.Load()
 
 	todoRepo := repository.NewToDoRepository()
 	todoService := service.NewToDoService(todoRepo, logger)
@@ -26,7 +26,7 @@ func main() {
 	http.HandleFunc("/todos", h.TaskHandler)
 
 	server := &http.Server{
-		Addr: ":8080",
+		Addr: cfg.ServerPort,
 	}
 
 	go func() {
