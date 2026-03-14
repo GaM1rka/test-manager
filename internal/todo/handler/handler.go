@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -71,12 +72,20 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.WithError(err).Warn("Error while parsing json in CreateTask method")
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
+	h.logger.WithFields(logrus.Fields{
+		"method":      "CreateTask",
+		"title":       req.Title,
+		"description": req.Description,
+	}).Info("Creating new task")
+
 	todo, err := h.service.CreateToDo(req.Title, req.Description)
 	if err != nil {
+		h.logger.WithError(err).Warn("Error while creating task")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -87,8 +96,13 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetTasks(w http.ResponseWriter, r *http.Request) {
+	h.logger.WithFields(logrus.Fields{
+		"method": "GetTasks",
+	}).Info("Getting all tasks")
+
 	todos, err := h.service.GetToDos()
 	if err != nil {
+		h.logger.WithError(err).Warn("Error while getting tasks")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -98,7 +112,28 @@ func (h *Handler) GetTasks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(todos)
 }
 
-func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request, id int) {}
+func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request, id int) {
+	h.logger.WithFields(logrus.Fields{
+		"method": "GetTaskByID",
+		"id":     id,
+	}).Info("Getting task by ID")
+
+	todo, err := h.service.GetToDoByID(id)
+	if err != nil {
+		if errors.Is(err, service.ErrTaskNotFound) {
+			h.logger.WithError(err).Warn("Task not found")
+			http.Error(w, "task not found", http.StatusNotFound)
+		} else {
+			h.logger.WithError(err).Error("Failed to get task")
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(todo)
+}
 
 func (h *Handler) UpdateTaskByID(w http.ResponseWriter, r *http.Request, id int) {}
 

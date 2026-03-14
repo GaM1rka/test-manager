@@ -1,12 +1,18 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"sort"
 	"test-manager/internal/todo/model"
 	"test-manager/internal/todo/repository"
 	validator "test-manager/pkg"
 
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	ErrTaskNotFound = errors.New("task not found")
 )
 
 type ToDoService struct {
@@ -50,4 +56,15 @@ func (s *ToDoService) GetToDos() ([]*model.ToDo, error) {
 	})
 
 	return todos, nil
+}
+
+func (s *ToDoService) GetToDoByID(id int) (*model.ToDo, error) {
+	todo, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get todo %d: %w", id, err)
+	}
+	if todo == nil {
+		return nil, ErrTaskNotFound
+	}
+	return todo, nil
 }

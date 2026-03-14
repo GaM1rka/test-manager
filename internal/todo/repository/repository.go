@@ -38,3 +38,14 @@ func (r *ToDoRepository) GetAll() ([]*model.ToDo, error) {
 	}
 	return todos, nil
 }
+
+func (r *ToDoRepository) GetByID(id int) (*model.ToDo, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	todo, exists := r.todos[id]
+	if !exists {
+		return nil, nil
+	}
+	return todo, nil
+}
