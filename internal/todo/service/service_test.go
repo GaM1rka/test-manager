@@ -48,3 +48,35 @@ func TestGetToDos(t *testing.T) {
 		t.Errorf("GetToDos() wrong sort order: %v", todos)
 	}
 }
+
+func TestGetToDoByID(t *testing.T) {
+	repo := repository.NewToDoRepository()
+	s := NewToDoService(repo)
+
+	todo1 := &model.ToDo{Title: "Title", Description: "Description"}
+	repo.Create(todo1)
+
+	tests := []struct {
+		name    string
+		id      int
+		wantErr bool
+	}{
+		{name: "found", id: todo1.ID, wantErr: false},
+		{name: "not found", id: 67, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := s.GetToDoByID(tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetToDoByID(%d) error = %v, wantErr %v", tt.id, err, tt.wantErr)
+			}
+			if !tt.wantErr && got.ID != tt.id {
+				t.Errorf("GetToDoByID(%d) wrong todo = %+v", tt.id, got)
+			}
+			if tt.wantErr && !errors.Is(err, ErrTaskNotFound) {
+				t.Errorf("GetToDoByID(%d) wrong error: %v", tt.id, err)
+			}
+		})
+	}
+}
