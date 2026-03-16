@@ -7,8 +7,6 @@ import (
 	"test-manager/internal/todo/model"
 	"test-manager/internal/todo/repository"
 	validator "test-manager/pkg"
-
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -16,14 +14,12 @@ var (
 )
 
 type ToDoService struct {
-	repo   *repository.ToDoRepository
-	logger *logrus.Logger
+	repo *repository.ToDoRepository
 }
 
-func NewToDoService(repo *repository.ToDoRepository, l *logrus.Logger) *ToDoService {
+func NewToDoService(repo *repository.ToDoRepository) *ToDoService {
 	return &ToDoService{
-		repo:   repo,
-		logger: l,
+		repo: repo,
 	}
 }
 
