@@ -23,7 +23,7 @@ func main() {
 	todoService := service.NewToDoService(todoRepo)
 	h := handler.NewHandler(todoService, logger)
 
-	http.HandleFunc("/todos", h.TaskHandler)
+	http.HandleFunc("/todos/", h.TaskHandler)
 
 	server := &http.Server{
 		Addr: cfg.ServerPort,
