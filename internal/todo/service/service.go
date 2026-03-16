@@ -7,8 +7,6 @@ import (
 	"test-manager/internal/todo/model"
 	"test-manager/internal/todo/repository"
 	validator "test-manager/pkg"
-
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -16,14 +14,12 @@ var (
 )
 
 type ToDoService struct {
-	repo   *repository.ToDoRepository
-	logger *logrus.Logger
+	repo *repository.ToDoRepository
 }
 
-func NewToDoService(repo *repository.ToDoRepository, l *logrus.Logger) *ToDoService {
+func NewToDoService(repo *repository.ToDoRepository) *ToDoService {
 	return &ToDoService{
-		repo:   repo,
-		logger: l,
+		repo: repo,
 	}
 }
 
@@ -94,12 +90,16 @@ func (s *ToDoService) UpdateToDo(id int, title, description string, completed bo
 }
 
 func (s *ToDoService) DeleteToDo(id int) error {
-	if _, err := s.repo.GetByID(id); err != nil {
-		return fmt.Errorf("task %d not found: %w", id, ErrTaskNotFound)
+	todo, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	if todo == nil {
+		return ErrTaskNotFound
 	}
 
 	if err := s.repo.Delete(id); err != nil {
-		return fmt.Errorf("failed to delete todo %d: %w", id, err)
+		return err
 	}
 
 	return nil

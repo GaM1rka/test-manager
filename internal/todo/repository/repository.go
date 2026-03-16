@@ -31,7 +31,7 @@ func (r *ToDoRepository) Create(todo *model.ToDo) error {
 
 func (r *ToDoRepository) GetAll() ([]*model.ToDo, error) {
 	r.mu.RLock()
-	defer r.mu.Unlock()
+	defer r.mu.RUnlock()
 
 	todos := make([]*model.ToDo, 0, len(r.todos))
 	for _, todo := range r.todos {
