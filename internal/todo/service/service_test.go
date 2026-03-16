@@ -80,3 +80,59 @@ func TestGetToDoByID(t *testing.T) {
 		})
 	}
 }
+
+func TestToDoService_UpdateToDo(t *testing.T) {
+	repo := repository.NewToDoRepository()
+	s := NewToDoService(repo)
+
+	originalTodo := &model.ToDo{Title: "Title", Description: "Description"}
+	repo.Create(originalTodo)
+
+	tests := []struct {
+		name        string
+		id          int
+		title       string
+		description string
+		completed   bool
+		wantErr     bool
+	}{
+		{
+			name:        "successful update",
+			id:          originalTodo.ID,
+			title:       "Updated Title",
+			description: "Updated Desc",
+			completed:   true,
+			wantErr:     false,
+		},
+		{
+			name:        "validation error",
+			id:          originalTodo.ID,
+			title:       "",
+			description: "Desc",
+			completed:   false,
+			wantErr:     true,
+		},
+		{
+			name:        "not found",
+			id:          52,
+			title:       "New Title",
+			description: "New Desc",
+			wantErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := s.UpdateToDo(tt.id, tt.title, tt.description, tt.completed)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateToDo(%d) error = %v, wantErr %v", tt.id, err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				if got.Title != tt.title || got.Description != tt.description || !got.Completed {
+					t.Errorf("UpdateToDo(%d) wrong result: %+v", tt.id, got)
+				}
+			}
+		})
+	}
+}
